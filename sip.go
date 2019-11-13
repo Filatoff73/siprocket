@@ -27,7 +27,7 @@ type SipMsg struct {
 }
 
 type SdpMsg struct {
-	MediaDesc sdpMediaDesc
+	MediaDesc []sdpMediaDesc
 	Attrib    []sdpAttrib
 	ConnData  sdpConnData
 }
@@ -45,9 +45,9 @@ func Parse(v []byte) (output SipMsg) {
 	output.Via = make([]sipVia, 0, 8)
 	attr_idx := 0
 	output.Sdp.Attrib = make([]sdpAttrib, 0, 8)
+	output.Sdp.MediaDesc = make([]sdpMediaDesc, 0)
 
 	lines := bytes.Split(v, []byte("\r\n"))
-
 	for i, line := range lines {
 		//fmt.Println(i, string(line))
 		line = bytes.TrimSpace(line)
@@ -96,11 +96,14 @@ func Parse(v []byte) (output SipMsg) {
 				// SDP: Break up into header and value
 				lhdr := strings.ToLower(string(line[0]))
 				lval := bytes.TrimSpace(line[2:])
+
 				// Switch on the line header
 				//fmt.Println(i, spos, string(lhdr), string(lval))
 				switch {
 				case lhdr == "m":
-					parseSdpMediaDesc(lval, &output.Sdp.MediaDesc)
+					tempMedia:= sdpMediaDesc{}
+					parseSdpMediaDesc(lval, &tempMedia)
+					output.Sdp.MediaDesc = append(output.Sdp.MediaDesc,tempMedia)
 				case lhdr == "c":
 					parseSdpConnectionData(lval, &output.Sdp.ConnData)
 				case lhdr == "a":
@@ -259,12 +262,15 @@ func PrintSipStruct(data *SipMsg) {
 
 	fmt.Println("-SDP --------------------------------")
 	// Media Desc
-	fmt.Println("  [MediaDesc]")
-	fmt.Println("    [MediaType] =>", string(data.Sdp.MediaDesc.MediaType))
-	fmt.Println("    [Port] =>", string(data.Sdp.MediaDesc.Port))
-	fmt.Println("    [Proto] =>", string(data.Sdp.MediaDesc.Proto))
-	fmt.Println("    [Fmt] =>", string(data.Sdp.MediaDesc.Fmt))
-	fmt.Println("    [Src] =>", string(data.Sdp.MediaDesc.Src))
+
+	for _,med := range data.Sdp.MediaDesc {
+		fmt.Println("  [MediaDesc]")
+		fmt.Println("    [MediaType] =>", string(med.MediaType))
+		fmt.Println("    [Port] =>", string(med.Port))
+		fmt.Println("    [Proto] =>", string(med.Proto))
+		fmt.Println("    [Fmt] =>", string(med.Fmt))
+		fmt.Println("    [Src] =>", string(med.Src))
+	}
 	// Connection Data
 	fmt.Println("  [ConnData]")
 	fmt.Println("    [AddrType] =>", string(data.Sdp.ConnData.AddrType))
