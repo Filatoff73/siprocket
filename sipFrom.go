@@ -1,4 +1,5 @@
 package siprocket
+import "strings"
 
 /*
 Parses a single line that is in the format of a from line, v
@@ -164,5 +165,12 @@ func parseSipFrom(v []byte, out *sipFrom) {
 			}
 		}
 		pos++
+	}
+	if out.Tag==nil {
+		vStr := string(v)
+		res := strings.Split(vStr,"tag=")
+		if len(res)==2 {
+			out.Tag = []byte(res[1])
+		}
 	}
 }

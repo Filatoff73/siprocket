@@ -1,4 +1,5 @@
 package siprocket
+import "strings"
 
 // Parses a single line that is in the format of a to line, v
 // Also requires a pointer to a struct of type sipTo to write output to
@@ -158,5 +159,12 @@ func parseSipTo(v []byte, out *sipTo) {
 			}
 		}
 		pos++
+	}
+	if out.Tag==nil {
+		vStr := string(v)
+		res := strings.Split(vStr,"tag=")
+		if len(res)==2 {
+			out.Tag = []byte(res[1])
+		}
 	}
 }
